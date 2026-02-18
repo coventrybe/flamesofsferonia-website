@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flames of Sferonia | Vincent Ogunjimi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-void: #020306;
+            --fire-white: #ffffff;
+            --fire-orange: #ff5e00;
+            --fire-glow: #ff2a00;
+            --fire-brown: #4a2c1a;
+            --ocean-light: #0ea5e9;
+            --ocean-mid: #0d9488;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            touch-action: pan-y; /* Allows natural vertical scrolling while capturing swipes on the book */
+        }
+
+        .title-font {
+            font-family: 'Cinzel Decorative', cursive;
+            text-transform: uppercase;
+            text-align: center;
+            display: block;
+        }
+
+        /* --- FIRE TITLES --- */
+        .line-flames {
+            font-size: clamp(3rem, 10vw, 7rem);
+            font-weight: 400;
+            letter-spacing: 0.4em;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom, var(--fire-white) 0%, var(--fire-orange) 50%, var(--fire-brown) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--fire-glow)) drop-shadow(0 0 30px var(--fire-orange));
+        }
+
+        .line-of {
+            font-size: clamp(1.2rem, 5vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom, var(--fire-orange) 0%, var(--ocean-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.6em;
+        }
+
+        .line-sferonia {
+            font-size: clamp(3.5rem, 15vw, 10rem);
+            font-weight: 900;
+            transform: scaleY(1.15) scaleX(0.9);
+            background: linear-gradient(to bottom, var(--ocean-light) 0%, var(--ocean-mid) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: url(#mountain-relief);
+        }
+
+        /* --- INTERACTIVE 3D BOOK (TOUCH & MOUSE) --- */
+        .book-container {
+            perspective: 2000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 0;
+            cursor: grab;
+            touch-action: none; /* Prevents scrolling ONLY when interacting with the book */
+        }
+
+        .book-container:active { cursor: grabbing; }
+
+        .book-wrap {
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+            transform: rotateY(-20deg) rotateX(5deg);
+        }
+
+        .book {
+            width: 260px;
+            height: 390px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .book-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://m.media-amazon.com/images/I/71pKeHckJIL._SL1491_.jpg');
+            background-size: cover;
+            z-index: 2;
+            transform: translateZ(20px);
+            border-radius: 2px 4px 4px 2px;
+            box-shadow: 15px 15px 50px rgba(0,0,0,0.9);
+            pointer-events: none;
+        }
+
+        .book-spine {
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            left: -20px;
+            transform: rotateY(-90deg);
+            background: linear-gradient(to right, #000, #333 50%, #000);
+            z-index: 1;
+        }
+
+        .book-pages {
+            position: absolute;
+            width: 100%;
+            height: 98%;
+            top: 1%;
+            background: repeating-linear-gradient(to right, #fff, #fff 2px, #ddd 3px);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .btn-pill {
+            background: linear-gradient(135deg, #ff7b00 0%, #ff4d00 100%);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            transition: all 0.3s ease;
+            border-radius: 9999px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #ember-field {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .ember {
+            position: absolute;
+            background: var(--fire-orange);
+            border-radius: 50%;
+            filter: blur(1.5px);
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(110vh) scale(1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-20vh) scale(0.2); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .book { width: 220px; height: 330px; }
+            .book-container { padding: 20px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<svg style="position: absolute; width: 0; height: 0;">
+    <filter id="mountain-relief">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="crags" />
+        <feDiffuseLighting in="crags" lighting-color="white" surfaceScale="5" result="relief">
+            <feDistantLight azimuth="45" elevation="55" />
+        </feDiffuseLighting>
+        <feComposite in="relief" in2="SourceGraphic" operator="in" />
+        <feBlend in="SourceGraphic" mode="multiply" />
+    </filter>
+</svg>
+
+<div id="ember-field"></div>
+
+<nav class="relative z-20 p-8 flex justify-between items-center max-w-7xl mx-auto">
+    <div class="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-500">Vincent Ogunjimi</div>
+    <a href="https://www.amazon.com.be/-/en/dp/B0GNLRD866" target="_blank" class="btn-pill px-6 py-2 text-[10px]">Get a copy</a>
+</nav>
+
+<header class="relative z-10 flex flex-col items-center pt-10 pb-20">
+    <div class="title-font line-flames">Flames</div>
+    <div class="title-font line-of">Of</div>
+    <div class="title-font line-sferonia">Sferonia</div>
+
+    <div class="mt-8 text-center px-4 relative z-20">
+        <p class="text-slate-500 text-xs tracking-[1.2em] uppercase mb-10">Operation Ghost of Okun</p>
+        <a href="https://www.amazon.com.be/-/en/dp/B0GNLRD866" target="_blank" class="btn-pill px-12 py-4 text-xs">Get a copy</a>
+    </div>
+</header>
+
+<section class="relative z-10 max-w-6xl mx-auto px-6 pb-20 grid md:grid-cols-2 gap-16 items-start">
+    <div class="md:sticky md:top-20 book-container" id="interaction-zone">
+        <div class="book-wrap" id="book-wrap">
+            <div class="book">
+                <div class="book-spine"></div>
+                <div class="book-cover"></div>
+                <div class="book-pages"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6 pt-10 flex flex-col max-md:items-center max-md:text-center relative z-20">
+        <h2 class="text-3xl font-bold uppercase tracking-tight leading-tight" style="background: linear-gradient(to right, #fde047, #ff5e00, #4a2c1a); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Humanity didn’t arrive on <br>Sferonia all at once.
+        </h2>
+        <div class="text-slate-400 text-lg leading-relaxed space-y-4 font-light">
+            <p>Due to the cruel math of time dilation, the first settlers landed centuries before the rest. By the time the last wave arrived, the pioneers had regressed into primitive societies.</p>
+            <p>Now, these <strong>Exohumans</strong> and the high-tech <strong>Newcomers</strong> are locked in a war for a world that cannot hold both.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-6 border-t border-b border-white/10 py-6 my-6 w-full max-md:justify-center">
+            <div class="flex flex-col"><span class="text-[0.7rem] text-slate-500 uppercase">Print length</span><span class="font-semibold">110 pages</span></div>
+            <div class="flex flex-col"><span class="text-[0.7rem] text-slate-500 uppercase">Language</span><span class="font-semibold">English</span></div>
+            <div class="flex flex-col"><span class="text-[0.7rem] text-slate-500 uppercase">ISBN-13</span><span class="font-semibold">979-8338302118</span></div>
+            <div class="flex flex-col"><span class="text-[0.7rem] text-slate-500 uppercase">Publication</span><span class="font-semibold">Sept 2024</span></div>
+        </div>
+
+        <div class="pt-4 w-full flex max-md:justify-center">
+            <a href="https://www.amazon.com.be/-/en/dp/B0GNLRD866" target="_blank" class="btn-pill px-12 py-4 text-sm">Get a copy</a>
+        </div>
+    </div>
+</section>
+
+<footer class="relative z-10 py-12 text-center opacity-30">
+    <p class="text-[10px] tracking-[0.4em] uppercase">
+        Crafted by <a href="https://coventry.be" class="font-bold hover:text-orange-500 transition-colors">Coventry</a>
+    </p>
+</footer>
+
+<script>
+  const wrap = document.getElementById('book-wrap');
+  const zone = document.getElementById('interaction-zone');
+
+  let isMoving = false;
+  let startX, startY;
+  let currentRotY = -20;
+  let currentRotX = 5;
+
+  const onStart = (x, y) => {
+    isMoving = true;
+    startX = x;
+    startY = y;
+  };
+
+  const onMove = (x, y) => {
+    if (!isMoving) return;
+    const deltaX = (x - startX) * 0.4;
+    const deltaY = (y - startY) * 0.4;
+    wrap.style.transform = `rotateY(${currentRotY + deltaX}deg) rotateX(${currentRotX - deltaY}deg)`;
+  };
+
+  const onEnd = (x, y) => {
+    if (!isMoving) return;
+    currentRotY += (x - startX) * 0.4;
+    currentRotX -= (y - startY) * 0.4;
+    isMoving = false;
+  };
+
+  // Touch Interaction (Mobile)
+  zone.addEventListener('touchstart', (e) => onStart(e.touches[0].pageX, e.touches[0].pageY));
+  zone.addEventListener('touchmove', (e) => onMove(e.touches[0].pageX, e.touches[0].pageY));
+  zone.addEventListener('touchend', (e) => onEnd(e.changedTouches[0].pageX, e.changedTouches[0].pageY));
+
+  // Mouse Interaction (Desktop)
+  zone.addEventListener('mousedown', (e) => onStart(e.pageX, e.pageY));
+  window.addEventListener('mousemove', (e) => onMove(e.pageX, e.pageY));
+  window.addEventListener('mouseup', (e) => onEnd(e.pageX, e.pageY));
+
+  // Ember background
+  function createEmber() {
+    const field = document.getElementById('ember-field');
+    const ember = document.createElement('div');
+    ember.className = 'ember';
+    const size = Math.random() * 4 + 2;
+    ember.style.width = size + 'px';
+    ember.style.height = size + 'px';
+    ember.style.left = Math.random() * 100 + 'vw';
+    const duration = Math.random() * 4 + 3;
+    ember.style.animationDuration = duration + 's';
+    field.appendChild(ember);
+    setTimeout(() => ember.remove(), duration * 1000);
+  }
+  setInterval(createEmber, 150);
+</script>
+</body>
+</html>
