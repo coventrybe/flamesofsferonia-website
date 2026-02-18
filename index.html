@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flames of Sferonia | Vincent Ogunjimi</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://flamesofsferonia.com/">
+    <meta property="og:title" content="Flames of Sferonia | Vincent Ogunjimi">
+    <meta property="og:description" content="Humanity didn’t arrive on Sferonia all at once. Discover the epic saga of Exohumans and Newcomers.">
+    <meta property="og:image" content="https://m.media-amazon.com/images/I/71pKeHckJIL._SL1491_.jpg">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://flamesofsferonia.com/">
+    <meta property="twitter:title" content="Flames of Sferonia | Vincent Ogunjimi">
+    <meta property="twitter:description" content="A world divided by time. A war for survival.">
+    <meta property="twitter:image" content="https://m.media-amazon.com/images/I/71pKeHckJIL._SL1491_.jpg">
+
+    <link rel="icon" type="image/jpg" href="https://m.media-amazon.com/images/I/71pKeHckJIL._SL1491_.jpg">
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -23,7 +38,6 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             margin: 0;
-            touch-action: pan-y; /* Allows natural vertical scrolling while capturing swipes on the book */
         }
 
         .title-font {
@@ -65,24 +79,20 @@
             filter: url(#mountain-relief);
         }
 
-        /* --- INTERACTIVE 3D BOOK (TOUCH & MOUSE) --- */
+        /* --- SCROLL-DRIVEN 3D BOOK --- */
         .book-container {
             perspective: 2000px;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 40px 0;
-            cursor: grab;
-            touch-action: none; /* Prevents scrolling ONLY when interacting with the book */
         }
-
-        .book-container:active { cursor: grabbing; }
 
         .book-wrap {
             transform-style: preserve-3d;
-            transition: transform 0.15s ease-out;
             will-change: transform;
-            transform: rotateY(-20deg) rotateX(5deg);
+            transform: rotateY(-25deg) rotateX(5deg);
+            transition: transform 0.1s linear;
         }
 
         .book {
@@ -102,7 +112,6 @@
             transform: translateZ(20px);
             border-radius: 2px 4px 4px 2px;
             box-shadow: 15px 15px 50px rgba(0,0,0,0.9);
-            pointer-events: none;
         }
 
         .book-spine {
@@ -124,7 +133,6 @@
             border-radius: 0 4px 4px 0;
         }
 
-        /* --- UI ELEMENTS --- */
         .btn-pill {
             background: linear-gradient(135deg, #ff7b00 0%, #ff4d00 100%);
             color: white;
@@ -160,7 +168,6 @@
 
         @media (max-width: 768px) {
             .book { width: 220px; height: 330px; }
-            .book-container { padding: 20px 0; }
         }
     </style>
 </head>
@@ -196,7 +203,7 @@
 </header>
 
 <section class="relative z-10 max-w-6xl mx-auto px-6 pb-20 grid md:grid-cols-2 gap-16 items-start">
-    <div class="md:sticky md:top-20 book-container" id="interaction-zone">
+    <div class="md:sticky md:top-20 book-container">
         <div class="book-wrap" id="book-wrap">
             <div class="book">
                 <div class="book-spine"></div>
@@ -236,44 +243,19 @@
 
 <script>
   const wrap = document.getElementById('book-wrap');
-  const zone = document.getElementById('interaction-zone');
 
-  let isMoving = false;
-  let startX, startY;
-  let currentRotY = -20;
-  let currentRotX = 5;
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = scrollTop / scrollHeight;
 
-  const onStart = (x, y) => {
-    isMoving = true;
-    startX = x;
-    startY = y;
-  };
+    const minRot = -25;
+    const maxRot = 25;
+    const currentRotY = minRot + (scrollPercent * (maxRot - minRot));
 
-  const onMove = (x, y) => {
-    if (!isMoving) return;
-    const deltaX = (x - startX) * 0.4;
-    const deltaY = (y - startY) * 0.4;
-    wrap.style.transform = `rotateY(${currentRotY + deltaX}deg) rotateX(${currentRotX - deltaY}deg)`;
-  };
+    wrap.style.transform = `rotateY(${currentRotY}deg) rotateX(5deg)`;
+  });
 
-  const onEnd = (x, y) => {
-    if (!isMoving) return;
-    currentRotY += (x - startX) * 0.4;
-    currentRotX -= (y - startY) * 0.4;
-    isMoving = false;
-  };
-
-  // Touch Interaction (Mobile)
-  zone.addEventListener('touchstart', (e) => onStart(e.touches[0].pageX, e.touches[0].pageY));
-  zone.addEventListener('touchmove', (e) => onMove(e.touches[0].pageX, e.touches[0].pageY));
-  zone.addEventListener('touchend', (e) => onEnd(e.changedTouches[0].pageX, e.changedTouches[0].pageY));
-
-  // Mouse Interaction (Desktop)
-  zone.addEventListener('mousedown', (e) => onStart(e.pageX, e.pageY));
-  window.addEventListener('mousemove', (e) => onMove(e.pageX, e.pageY));
-  window.addEventListener('mouseup', (e) => onEnd(e.pageX, e.pageY));
-
-  // Ember background
   function createEmber() {
     const field = document.getElementById('ember-field');
     const ember = document.createElement('div');
